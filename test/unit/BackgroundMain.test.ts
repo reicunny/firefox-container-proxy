@@ -97,10 +97,59 @@ describe('BackgroundMain', function () {
         })
       })
     })
+
+    describe('includePatterns (proxy only for matching hosts/URLs)', () => {
+      it('should proxy when URL matches exact host', async () => {
+        await givenSomeProxyIsSetUpForContainer({ containerId: 'container1', includePatterns: ['subdomain.domain.com'] })
+
+        const result = await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://subdomain.domain.com/page' })
+
+        expect(result).to.be.an('array')
+        expect(result).to.be.not.empty
+      })
+
+      it('should go direct when URL does not match', async () => {
+        await givenSomeProxyIsSetUpForContainer({ containerId: 'container1', includePatterns: ['subdomain.domain.com'] })
+
+        const result = await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://other.com/' })
+
+        expect(result).to.be.deep.equal(doNotProxy)
+      })
+
+      it('should support *domain.com wildcard for base and subdomains', async () => {
+        await givenSomeProxyIsSetUpForContainer({ containerId: 'container1', includePatterns: ['*domain.com'] })
+
+        expect(await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://domain.com/' })).to.be.not.empty
+        expect(await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://sub.domain.com/' })).to.be.not.empty
+        expect(await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://other.com/' })).to.be.deep.equal(doNotProxy)
+      })
+
+      it('should support *.domain.com wildcard', async () => {
+        await givenSomeProxyIsSetUpForContainer({ containerId: 'container1', includePatterns: ['*.domain.com'] })
+
+        expect(await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://a.b.domain.com/' })).to.be.not.empty
+        expect(await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://other.com/' })).to.be.deep.equal(doNotProxy)
+      })
+
+      it('should support URL wildcards', async () => {
+        await givenSomeProxyIsSetUpForContainer({ containerId: 'container1', includePatterns: ['https://*.example.com/*'] })
+
+        expect(await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://sub.example.com/page' })).to.be.not.empty
+        expect(await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://other.com/' })).to.be.deep.equal(doNotProxy)
+      })
+
+      it('should proxy everything when includePatterns is empty', async () => {
+        await givenSomeProxyIsSetUpForContainer({ containerId: 'container1', includePatterns: [] })
+
+        const result = await backgroundMain.onRequest({ cookieStoreId: 'container1', url: 'https://anything.com/' })
+
+        expect(result).to.be.not.empty
+      })
+    })
   })
 })
 
-async function givenSomeProxyIsSetUpForContainer ({ host, containerId, doNotProxyLocal }: any): Promise<void> {
+async function givenSomeProxyIsSetUpForContainer ({ host, containerId, doNotProxyLocal, includePatterns }: any): Promise<void> {
   const proxyId = 'proxy1'
   const proxy: any = {
     id: proxyId,
@@ -110,6 +159,9 @@ async function givenSomeProxyIsSetUpForContainer ({ host, containerId, doNotProx
   }
   if (typeof doNotProxyLocal !== 'undefined') {
     proxy.doNotProxyLocal = doNotProxyLocal
+  }
+  if (typeof includePatterns !== 'undefined') {
+    proxy.includePatterns = includePatterns
   }
   await store.putProxy(tryFromDao(proxy) as ProxySettings)
 

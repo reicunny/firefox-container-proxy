@@ -16,6 +16,7 @@ export interface ProxyDao {
   password?: string
   proxyDNS?: boolean
   doNotProxyLocal: boolean
+  includePatterns?: string[]
 }
 
 export namespace ProxyDao {
@@ -150,6 +151,9 @@ function fillInDefaults (proxy: Partial<ProxyDao>): ProxyDao {
   }
   if (typeof proxy.doNotProxyLocal === 'undefined') {
     proxy.doNotProxyLocal = true
+  }
+  if (proxy.includePatterns === undefined) {
+    proxy.includePatterns = []
   }
   if (typeof proxy.proxyDNS === 'undefined') {
     if (proxy.type === 'socks' || proxy.type === 'socks4') {

@@ -77,6 +77,35 @@ describe('Store', () => {
     expect(gotProxy?.doNotProxyLocal).to.be.equal(false)
   })
 
+  it('stores includePatterns value', async () => {
+    const id = 'someId'
+    const proxy = someProxyWith(id, { includePatterns: ['*.example.com', 'sub.domain.com'] })
+
+    await store.putProxy(proxy)
+
+    const gotProxy = await store.getProxyById(id)
+
+    expect(gotProxy?.includePatterns).to.be.deep.equal(['*.example.com', 'sub.domain.com'])
+  })
+
+  it('includePatterns defaults to empty array', async () => {
+    const id = 'someId'
+    const dao: any = {
+      id,
+      title: 'some title',
+      type: 'socks',
+      host: 'localhost',
+      port: 1080,
+      doNotProxyLocal: true
+    }
+    delete dao.includePatterns
+    await store.putProxy(tryFromDao(dao) as ProxySettings)
+
+    const gotProxy = await store.getProxyById(id)
+
+    expect(gotProxy?.includePatterns).to.be.deep.equal([])
+  })
+
   it('should be able to delete proxy', async () => {
     const id = 'someId'
     await store.putProxy(someProxyWith(id))

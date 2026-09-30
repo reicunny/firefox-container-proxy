@@ -59,6 +59,18 @@
         "message": "Proxy DNS requests",
         "description": "`Proxy DNS requests` field in the proxy form"
     },
+    "ProxyForm_proxyOnlyForFieldLabel": {
+        "message": "Proxy only for these hosts/URLs (one per line, empty = proxy all)",
+        "description": "`Proxy only for these hosts` field in the proxy form"
+    },
+    "ProxyForm_proxyOnlyForFieldPlaceholder": {
+        "message": "subdomain.example.com\n*.example.com",
+        "description": "Placeholder for `Proxy only for these hosts` field in the proxy form"
+    },
+    "ProxyForm_proxyOnlyForFieldHelp": {
+        "message": "Examples: example.com, subdomain.example.com, *.example.com, *example.com, https://*.example.com/*. Requests not matching any entry go directly.",
+        "description": "Help text for `Proxy only for these hosts` field in the proxy form"
+    },
     "ProxyForm_incorrectServerError": {
         "message": "Value should be either IP address or domain name",
         "description": "Error message displayed when incorrect server is entered"

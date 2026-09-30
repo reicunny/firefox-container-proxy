@@ -2,6 +2,7 @@ import { Store } from '../store/Store'
 import { HttpProxySettings, HttpsProxySettings, ProxySettings } from '../domain/ProxySettings'
 import { ProxyInfo, Socks5ProxyInfo } from '../domain/ProxyInfo'
 import { ProxyType } from '../domain/ProxyType'
+import { matchesAnyPattern } from '../domain/proxyPatterns'
 import BlockingResponse = browser.webRequest.BlockingResponse
 import _OnAuthRequiredDetails = browser.webRequest._OnAuthRequiredDetails
 import _OnRequestDetails = browser.proxy._OnRequestDetails
@@ -86,6 +87,12 @@ export default class BackgroundMain {
             }
           } catch (e) {
             console.error(e)
+          }
+
+          if (p.includePatterns !== undefined && p.includePatterns.length > 0) {
+            if (!matchesAnyPattern(requestDetails.url, p.includePatterns)) {
+              return false
+            }
           }
 
           return true

@@ -11,6 +11,7 @@ import { ProxyDao, Store } from '../../store/Store'
 import { ProxySettings } from '../../domain/ProxySettings'
 import tryFromDao = ProxySettings.tryFromDao
 import { ProxyType } from '../../domain/ProxyType'
+import { parsePatternsInput } from '../../domain/proxyPatterns'
 import s from './ProxyForm.module.scss'
 
 const t = browser.i18n.getMessage
@@ -27,6 +28,7 @@ export interface ModelData extends ProxyDao {
   password: string
   proxyDNS: boolean
   doNotProxyLocal: boolean
+  includePatterns: string[]
 }
 
 const NEW_PROXY: ModelData = {
@@ -38,7 +40,8 @@ const NEW_PROXY: ModelData = {
   username: '',
   password: '',
   proxyDNS: true,
-  doNotProxyLocal: true
+  doNotProxyLocal: true,
+  includePatterns: []
 }
 
 class ProxyModel {
@@ -58,7 +61,7 @@ class ProxyModel {
     const store: Store = (window as any).store
     const settings = await store.getProxyById(id)
     if (settings !== null) {
-      this.current = { ...NEW_PROXY, ...settings.asDao() }
+      this.current = { ...NEW_PROXY, ...settings.asDao(), includePatterns: settings.asDao().includePatterns ?? [] }
     } else {
       this.current = newProxy
     }
@@ -187,7 +190,22 @@ export default class ProxyForm {
           ])
         ),
         m(`div.${s.advanced}`, [
-          m(this.doNotProxyLocalCheckbox), (isSocks ? m(this.proxyDNSCheckbox) : [])
+          m(this.doNotProxyLocalCheckbox), (isSocks ? m(this.proxyDNSCheckbox) : []),
+          m('div.input', [
+            m('label.input__label', { for: 'includePatterns' }, t('ProxyForm_proxyOnlyForFieldLabel')),
+            m('textarea.input__field', {
+              id: 'includePatterns',
+              'data-testid': 'includePatterns',
+              rows: 3,
+              placeholder: t('ProxyForm_proxyOnlyForFieldPlaceholder'),
+              title: t('ProxyForm_proxyOnlyForFieldHelp'),
+              value: (this.model.current.includePatterns ?? []).join('\n'),
+              oninput: (e: InputEvent) => {
+                this.model.current.includePatterns = parsePatternsInput((e.target as HTMLTextAreaElement).value)
+              }
+            }),
+            m('div', { style: 'font-size: 80%; opacity: 0.8' }, t('ProxyForm_proxyOnlyForFieldHelp'))
+          ])
         ]),
         m(`div.${s.actions}`, [
           m('button[type=button]', {

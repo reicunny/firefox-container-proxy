@@ -33,6 +33,7 @@ abstract class ProxySettingsBase<PI extends ProxyInfo> {
   readonly host: string
   readonly port: number
   readonly doNotProxyLocal: boolean
+  readonly includePatterns: string[]
 
   protected constructor (dao: ProxyDao) {
     this.id = dao.id
@@ -40,6 +41,7 @@ abstract class ProxySettingsBase<PI extends ProxyInfo> {
     this.host = dao.host
     this.port = dao.port
     this.doNotProxyLocal = dao.doNotProxyLocal
+    this.includePatterns = dao.includePatterns ?? []
   }
 
   abstract get type (): PI['type']
@@ -59,7 +61,8 @@ abstract class ProxySettingsBase<PI extends ProxyInfo> {
       type: this.type,
       host: this.host,
       port: this.port,
-      doNotProxyLocal: this.doNotProxyLocal
+      doNotProxyLocal: this.doNotProxyLocal,
+      includePatterns: this.includePatterns
     }
   }
 }
